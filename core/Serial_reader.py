@@ -9,7 +9,7 @@ class SerialReader:
         self.velocity = 0.0
         self.pitch = 0.0
         self.roll = 0.0
-        self.yaw = 0.0
+        self.status = 0
         self.altitude = 0.0
         self.latitude = 0.0
         self.longitude = 0.0
@@ -52,7 +52,7 @@ class SerialReader:
                     self.velocity = float(data[0])
                     self.pitch = float(data[1])
                     self.roll = float(data[2])
-                    self.yaw = float(data[3])
+                    self.status = int(data[3])
                     self.altitude = float(data[4])
                     self.latitude = float(data[5])
                     self.longitude = float(data[6])
