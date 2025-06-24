@@ -15,7 +15,7 @@ class SerialConfigDialog(QDialog):
         self.logger = logging.getLogger('Lazarus_Ground_Station.serial_config')
         self.setWindowTitle(
             "Konfiguracja portu szeregowego i LoRa")
-        self.setFixedSize(450, 400)
+        self.setFixedSize(450, 600)
         self.setStyleSheet("""
             QDialog { background-color: #2c3e50; }
             QLabel { color: #ecf0f1; font-size: 12px; }
@@ -35,14 +35,18 @@ class SerialConfigDialog(QDialog):
             QPushButton:disabled { background-color: #2c3e50; color: #7f8c8d; }
         """)
 
-        self.port_name = "COM9"
+        self.port_name = ""
         self.baud_rate = 9600
         self.lora_config = {
             'frequency': '868',
+            'spread_factor': '7',
             'bandwidth': '125',
-            'spreading_factor': '10',
-            'coding_rate': '4/5',
-            'power': '20'
+            'txpr': '8',
+            'rxpr': '8',
+            'power': '14',
+            'crc': 'ON',
+            'iq': 'OFF',
+            'net': 'OFF',
         }
 
         layout = QVBoxLayout()
@@ -74,47 +78,83 @@ class SerialConfigDialog(QDialog):
 
         freq_layout = QHBoxLayout()
         freq_layout.addWidget(
-            QLabel("Częstotliwość (MHz):"))
+            QLabel("Częstotliwość (F) (MHz):"))
         self.freq_combo = QComboBox()
         self.freq_combo.addItems(["433", "868", "915"])
-        self.freq_combo.setCurrentIndex(1)
+        self.freq_combo.setCurrentText("868")
         freq_layout.addWidget(self.freq_combo)
         lora_layout.addLayout(freq_layout)
 
-        bw_layout = QHBoxLayout()
-        bw_layout.addWidget(
-            QLabel("Szerokość pasma (kHz):"))
-        self.bw_combo = QComboBox()
-        self.bw_combo.addItems(["125", "250", "500"])
-        self.bw_combo.setCurrentIndex(0)
-        bw_layout.addWidget(self.bw_combo)
-        lora_layout.addLayout(bw_layout)
-
         sf_layout = QHBoxLayout()
-        sf_layout.addWidget(QLabel("Spreading Factor:"))
+        sf_layout.addWidget(
+            QLabel("Spreading factor (SF):"))
         self.sf_combo = QComboBox()
-        self.sf_combo.addItems(
-            ["7", "8", "9", "10", "11", "12"])
-        self.sf_combo.setCurrentIndex(3)  # SF10
+        self.sf_combo.addItems(["7", "8", "9", "10", "11", "12"])
+        self.sf_combo.setCurrentText("7")
         sf_layout.addWidget(self.sf_combo)
         lora_layout.addLayout(sf_layout)
 
-        cr_layout = QHBoxLayout()
-        cr_layout.addWidget(QLabel("Coding Rate:"))
-        self.cr_combo = QComboBox()
-        self.cr_combo.addItems(["4/5", "4/6", "4/7", "4/8"])
-        self.cr_combo.setCurrentIndex(0)
-        cr_layout.addWidget(self.cr_combo)
-        lora_layout.addLayout(cr_layout)
+        bw_layout = QHBoxLayout()
+        bw_layout.addWidget(
+            QLabel("Szerokość pasma (BW) (kHz):"))
+        self.bw_combo = QComboBox()
+        self.bw_combo.addItems(["125", "250", "500"])
+        self.bw_combo.setCurrentText("250")
+        bw_layout.addWidget(self.bw_combo)
+        lora_layout.addLayout(bw_layout)
 
-        tx_layout = QHBoxLayout()
-        tx_layout.addWidget(QLabel("Moc nadawania (dBm):"))
-        self.tx_combo = QComboBox()
-        self.tx_combo.addItems(
+        txpr_layout = QHBoxLayout()
+        txpr_layout.addWidget(QLabel("Preamble nadawania (TXPR):"))
+        self.txpr_combo = QComboBox()
+        self.txpr_combo.addItems(
+            ["7", "8", "9", "10", "11", "12"])
+        self.txpr_combo.setCurrentText("8")
+        txpr_layout.addWidget(self.txpr_combo)
+        lora_layout.addLayout(txpr_layout)
+
+        rxpr_layout = QHBoxLayout()
+        rxpr_layout.addWidget(QLabel("Preamble odbierania (RXPR):"))
+        self.rxpr_combo = QComboBox()
+        self.rxpr_combo.addItems(["7", "8", "9", "10", "11", "12"])
+        self.rxpr_combo.setCurrentText("8")
+        rxpr_layout.addWidget(self.rxpr_combo)
+        lora_layout.addLayout(rxpr_layout)
+
+        pow_layout = QHBoxLayout()
+        pow_layout.addWidget(QLabel("Moc nadawania (POW) (dBm):"))
+        self.pow_combo = QComboBox()
+        self.pow_combo.addItems(
             ["2", "5", "8", "11", "14", "17", "20"])
-        self.tx_combo.setCurrentIndex(6)  # 20 dBm
-        tx_layout.addWidget(self.tx_combo)
-        lora_layout.addLayout(tx_layout)
+        self.pow_combo.setCurrentText("14")
+        pow_layout.addWidget(self.pow_combo)
+        lora_layout.addLayout(pow_layout)
+
+        crc_layout = QHBoxLayout()
+        crc_layout.addWidget(QLabel("Suma kontrolna (CRC):"))
+        self.crc_combo = QComboBox()
+        self.crc_combo.addItems(
+            ["ON", "OFF"])
+        self.crc_combo.setCurrentText("ON")
+        crc_layout.addWidget(self.crc_combo)
+        lora_layout.addLayout(crc_layout)
+
+        iq_layout = QHBoxLayout()
+        iq_layout.addWidget(QLabel("Odwrócenie bitu (IQ):"))
+        self.iq_combo = QComboBox()
+        self.iq_combo.addItems(
+            ["ON", "OFF"])
+        self.iq_combo.setCurrentText("OFF")
+        iq_layout.addWidget(self.iq_combo)
+        lora_layout.addLayout(iq_layout)
+
+        net_layout = QHBoxLayout()
+        net_layout.addWidget(QLabel("Tryb LoRaWAN (NET):"))
+        self.net_combo = QComboBox()
+        self.net_combo.addItems(
+            ["ON", "OFF"])
+        self.net_combo.setCurrentText("OFF")
+        net_layout.addWidget(self.net_combo)
+        lora_layout.addLayout(net_layout)
 
         lora_group.setLayout(lora_layout)
         layout.addWidget(lora_group)
@@ -178,10 +218,14 @@ class SerialConfigDialog(QDialog):
         if self.lora_config is not None:
             self.lora_config = {
                 'frequency': self.freq_combo.currentText(),
+                'spread_factor': self.sf_combo.currentText(),
                 'bandwidth': self.bw_combo.currentText(),
-                'spreading_factor': self.sf_combo.currentText(),
-                'coding_rate': self.cr_combo.currentText(),
-                'power': self.tx_combo.currentText()
+                'txpr': self.txpr_combo.currentText(),
+                'rxpr': self.rxpr_combo.currentText(),
+                'power': self.pow_combo.currentText(),
+                'crc': self.crc_combo.currentText(),
+                'iq': self.iq_combo.currentText(),
+                'net': self.net_combo.currentText(),
             }
 
     def get_settings(self):
