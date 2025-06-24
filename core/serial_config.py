@@ -1,4 +1,5 @@
 import sys
+import logging
 from PyQt5.QtWidgets import (QApplication, QDialog,
                              QVBoxLayout, QHBoxLayout,
                              QLabel,
@@ -11,6 +12,7 @@ import serial.tools.list_ports
 class SerialConfigDialog(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.logger = logging.getLogger('Lazarus_Ground_Station.serial_config')
         self.setWindowTitle(
             "Konfiguracja portu szeregowego i LoRa")
         self.setFixedSize(450, 400)
@@ -33,10 +35,10 @@ class SerialConfigDialog(QDialog):
             QPushButton:disabled { background-color: #2c3e50; color: #7f8c8d; }
         """)
 
-        self.port_name = ""
+        self.port_name = "COM9"
         self.baud_rate = 9600
         self.lora_config = {
-            'frequency': '433',
+            'frequency': '868',
             'bandwidth': '125',
             'spreading_factor': '10',
             'coding_rate': '4/5',
@@ -151,14 +153,20 @@ class SerialConfigDialog(QDialog):
         else:
             self.port_combo.addItem(
                 "Brak dostępnych portów")
+        self.logger.debug(
+            f"Dostępne porty: {[p.device for p in ports]}")
 
     def accept(self):
         self._get_settings()
+        self.logger.info(
+            f"Wybrano konfigurację: port={self.port_name}, baudrate={self.baud_rate}, lora={self.lora_config}")
         super().accept()
 
     def accept_no_lora(self):
         self.lora_config = None
         self._get_settings()
+        self.logger.info(
+            f"Wybrano konfigurację bez LoRa: port={self.port_name}, baudrate={self.baud_rate}")
         super().accept()
 
     def _get_settings(self):
@@ -166,9 +174,7 @@ class SerialConfigDialog(QDialog):
             self.port_name = ""
         else:
             self.port_name = self.port_combo.currentText()
-
         self.baud_rate = int(self.baud_combo.currentText())
-
         if self.lora_config is not None:
             self.lora_config = {
                 'frequency': self.freq_combo.currentText(),
