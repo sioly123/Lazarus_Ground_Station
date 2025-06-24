@@ -8,6 +8,7 @@ def main():
     window.resize(800, 600)
     window.show()
     sys.exit(app.exec_())
+    # test
 
 if __name__ == "__main__":
     main()
