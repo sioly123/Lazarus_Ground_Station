@@ -63,3 +63,29 @@ class SerialReader:
                     self.len = int(match.group(1))
                     self.rssi= int(match.group(2))
                     self.snr= int(match.group(3))
+
+    def LoraSet(self, config):
+        if self.ser is None:
+            print(
+                "Port szeregowy nie jest dostępny, pomijam konfigurację LoRa")
+            return
+
+        try:
+            print("Rozpoczynanie konfiguracji LoRa...")
+
+            self.ser.write(b'at\r\n')
+            time.sleep(0.5)
+            self.ser.write(b'at+mode=test\r\n')
+            time.sleep(0.5)
+
+            rf_cmd = f'at+test=rfcfg,{config["frequency"]}.000,{config["bandwidth"]},{config["power"]},{config["spreading_factor"]},{config["coding_rate"]}\r\n'
+            self.ser.write(rf_cmd.encode('utf-8'))
+            time.sleep(0.5)
+
+            self.ser.write(b'at+test=rxlrpkt\r\n')
+            time.sleep(0.5)
+
+            self.ser.reset_input_buffer()
+            print("Konfiguracja LoRa wykonana pomyślnie")
+        except Exception as e:
+            print(f"Błąd konfiguracji LoRa: {str(e)}")

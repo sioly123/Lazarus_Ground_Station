@@ -1,11 +1,11 @@
 from PyQt5.QtWidgets import QMainWindow, QTextEdit, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton
 from PyQt5.QtCore import QTimer, Qt
-from core.Serial_reader import SerialReader
+from core.serial_reader import SerialReader
 from gui.live_plot import LivePlot
 from datetime import datetime
 
 class MainWindow(QMainWindow):
-    def __init__(self):
+    def __init__(self, config):
         super().__init__()
 
         self.now_str = ""
@@ -22,8 +22,11 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("LoRa Telemetry")
         self.setStyleSheet("background-color: black; color: white;")
 
-        self.serial = SerialReader("COM9", 9600)
-        self.serial.LoraSet()
+        self.serial = SerialReader(config['port'],
+                                   config['baudrate'])
+
+        if config['lora_config']:
+            self.serial.LoraSet(config['lora_config'])
 
         self.alt_plot = LivePlot(title="Altitude", color='b')
         self.velocity_plot = LivePlot(title="Velocity", color='r')
