@@ -5,6 +5,7 @@ from core.serial_reader import SerialReader
 from gui.live_plot import LivePlot
 from datetime import datetime
 from core.process_data import ProcessData
+from core.csv_handler import CsvHandler
 
 class MainWindow(QMainWindow):
     def __init__(self, config):
@@ -33,6 +34,10 @@ class MainWindow(QMainWindow):
             'rssi': 0,
             'snr': 0
         }
+
+        self.csv_handler = CsvHandler()
+        self.logger.info(
+            f"CSV handler zainicjalizowany w sesji: {self.csv_handler.session_dir}")
 
         self.signal_quality = "None"
 
@@ -141,6 +146,7 @@ class MainWindow(QMainWindow):
         self.current_data = data
         try:
             self.update_data()
+            self.csv_handler.write_row(data)
         except Exception as e:
             self.logger.exception(
                 f"Błąd w update_data(): {e}")
@@ -227,4 +233,5 @@ class MainWindow(QMainWindow):
 
     def closeEvent(self, event):
         self.serial.stop_reading()
+        self.csv_handler.close_file()
         super().closeEvent(event)

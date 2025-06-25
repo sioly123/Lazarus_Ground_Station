@@ -3,19 +3,27 @@ import logging
 from PyQt5.QtWidgets import (QApplication, QDialog)
 from gui.main_window import MainWindow
 from core.serial_config import SerialConfigDialog
+from core.utils import Utils
+import os
 
 def main():
 
+    session_dir = Utils.create_session_directory()
+    log_file = os.path.join(session_dir, 'app_events.log')
+
     logging.basicConfig(
-        filename=r'logs\app_events.log', filemode='a',
+        filename=log_file,
+        filemode='a',
         level=logging.INFO,
-        format='%(asctime)s %(levelname)-8s %(message)s',
+        format='%(asctime)s %(levelname)-8s %(name)s - %(message)s',
         datefmt='%Y-%m-%d %H:%M:%S'
     )
+
     logger = logging.getLogger('Lazarus_Ground_Station')
+    logger.info(f"Log file location: {log_file}")
+    logger.info("Uruchamianie aplikacji")
 
     app = QApplication(sys.argv)
-    logger.info("Uruchamianie aplikacji")
 
     config_dialog = SerialConfigDialog()
     if config_dialog.exec_() == QDialog.Accepted:
@@ -31,7 +39,6 @@ def main():
     exit_code = app.exec_()
     logger.info(f"Aplikacja zakończona z kodem {exit_code}")
     sys.exit(exit_code)
-    # test
 
 if __name__ == "__main__":
     main()
