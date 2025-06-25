@@ -4,6 +4,7 @@ from PyQt5.QtCore import QTimer, Qt
 from core.serial_reader import SerialReader
 from gui.live_plot import LivePlot
 from datetime import datetime
+from core.process_data import ProcessData
 
 class MainWindow(QMainWindow):
     def __init__(self, config):
@@ -20,6 +21,19 @@ class MainWindow(QMainWindow):
         self.engine_detection = False
         self.recovery_detection = False
 
+        self.current_data = {
+            'velocity': 0.0,
+            'altitude': 0.0,
+            'pitch': 0.0,
+            'roll': 0.0,
+            'status': 0,
+            'latitude': 0.0,
+            'longitude': 0.0,
+            'len': 0,
+            'rssi': 0,
+            'snr': 0
+        }
+
         self.signal_quality = "None"
 
         self.setWindowTitle("LoRa Telemetry")
@@ -27,10 +41,17 @@ class MainWindow(QMainWindow):
 
         self.serial = SerialReader(config['port'], config['baudrate'])
         self.logger.info(f"SerialReader zainicjalizowany na porcie {config['port']} z baudrate {config['baudrate']}")
+        self.processor = ProcessData()
+        self.logger.info(
+            f"Singleton ProcessData zainicjalizowany")
 
         if config['lora_config']:
             self.serial.LoraSet(config['lora_config'], config['is_config_selected'])
             self.logger.info(f"Konfiguracja LoRa ustawiona: {config['lora_config']}")
+
+        self.serial.telemetry_received.connect(self.processor.handle_telemetry)
+        self.serial.transmission_info_received.connect(self.processor.handle_transmission_info)
+        self.processor.processed_data_ready.connect(self.handle_processed_data)
 
         # Wykresy
         self.alt_plot = LivePlot(title="Altitude", color='b')
@@ -68,7 +89,6 @@ class MainWindow(QMainWindow):
         for btn in buttons:
             btn.setStyleSheet("QPushButton {border: 2px solid white; border-radius: 5px; color: red; padding: 5px;}")
 
-        # Układ GUI
         central = QWidget()
         main_layout = QVBoxLayout()
 
@@ -108,58 +128,97 @@ class MainWindow(QMainWindow):
         central.setLayout(main_layout)
         self.setCentralWidget(central)
 
-        self.timer = QTimer()
-        self.timer.timeout.connect(self.update_data)
-        self.timer.start(50)
-        self.logger.info("Timer rozpoczęty, częstotliwość: 50 ms")
+        # self.timer = QTimer()
+        # self.timer.timeout.connect(self.update_data)
+        # self.timer.start(50)
+        # self.logger.info("Timer rozpoczęty, częstotliwość: 50 ms")
+
+    def handle_processed_data(self, data):
+        self.current_data = data
+        self.logger.info("Otrzymano z wydarzenia następujące dane:" + data)
+        self.update_data()
 
     def update_data(self):
-        self.serial.DecodeLine()
-        self.alt_plot.update_plot(self.serial.altitude)
-        self.velocity_plot.update_plot(self.serial.velocity)
-        self.pitch_plot.update_plot(self.serial.pitch)
-        self.roll_plot.update_plot(self.serial.roll)
+        # Update plots
+        self.alt_plot.update_plot(
+            self.current_data['altitude'])
+        self.velocity_plot.update_plot(
+            self.current_data['velocity'])
+        self.pitch_plot.update_plot(
+            self.current_data['pitch'])
+        self.roll_plot.update_plot(
+            self.current_data['roll'])
 
         self.console_update_counter += 1
         if self.console_update_counter >= 10:
             self.console_update_counter = 0
-            self.now_str = datetime.now().strftime("%H:%M:%S")
-            msg = f"{self.serial.velocity};{self.serial.altitude};{self.serial.pitch};{self.serial.roll};{self.serial.status};{self.serial.latitude};{self.serial.longitude}"
-            self.console.append(f"{self.now_str} |  LEN: {self.serial.len} bytes | RSSI: {self.serial.rssi} dBm | SNR: {self.serial.snr} dB | msg: {msg}")
+            self.now_str = datetime.now().strftime(
+                "%H:%M:%S")
+            msg = (
+                f"{self.current_data['velocity']};{self.current_data['altitude']};"
+                f"{self.current_data['pitch']};{self.current_data['roll']};"
+                f"{self.current_data['status']};{self.current_data['latitude']};"
+                f"{self.current_data['longitude']}")
+            self.console.append(
+                f"{self.now_str} | LEN: {self.current_data['len']} bajtów | "
+                f"RSSI: {self.current_data['rssi']} dBm | "
+                f"SNR: {self.current_data['snr']} dB | msg: {msg}"
+            )
             self.logger.debug(f"Odebrano dane: {msg}")
 
-        if ((self.serial.status & (1 << 0)) != 0) and not self.calib_detection:
-            self.calib_button.setStyleSheet("QPushButton {border: 2px solid white; border-radius: 5px; background-color: black; color: green; padding: 5px;}")
+        if ((self.current_data['status'] & (
+                1 << 0)) != 0) and not self.calib_detection:
+            self.calib_button.setStyleSheet(
+                "QPushButton {border: 2px solid white; border-radius: 5px; background-color: black; color: green; padding: 5px;}")
             self.calib_button.setText("Calibration: On")
-            self.now_str = datetime.now().strftime("%H:%M:%S")
-            self.console.append(f"{self.now_str} | CALIBRATION ON")
+            self.now_str = datetime.now().strftime(
+                "%H:%M:%S")
+            self.console.append(
+                f"{self.now_str} | KALIBRACJA WŁĄCZONA")
             self.logger.info("Detekcja kalibracji")
             self.calib_detection = True
 
-        if ((self.serial.status & (1 << 1)) != 0) and not self.start_detection:
-            self.start_button.setStyleSheet("QPushButton {border: 2px solid white; border-radius: 5px; background-color: black; color: green; padding: 5px;}")
-            self.now_str = datetime.now().strftime("%H:%M:%S")
-            self.console.append(f"{self.now_str} | START DETECTED")
+        if ((self.current_data['status'] & (
+                1 << 1)) != 0) and not self.start_detection:
+            self.start_button.setStyleSheet(
+                "QPushButton {border: 2px solid white; border-radius: 5px; background-color: black; color: green; padding: 5px;}")
+            self.now_str = datetime.now().strftime(
+                "%H:%M:%S")
+            self.console.append(
+                f"{self.now_str} | WYKRYTO START")
             self.logger.info("Detekcja startu")
             self.start_detection = True
 
         snr_threshold = 5.0
         rssi_threshold = -80.0
-        if self.serial.snr >= snr_threshold and self.serial.rssi >= rssi_threshold:
-            self.signal_quality = "Good"
-            self.signal_button.setStyleSheet("QPushButton {border: 2px solid white; border-radius: 5px; background-color: black; color: green; padding: 5px;}")
-        elif self.serial.snr < snr_threshold and self.serial.rssi < rssi_threshold:
-            self.signal_quality = "Poor"
-            self.signal_button.setStyleSheet("QPushButton {border: 2px solid white; border-radius: 5px; background-color: black; color: red; padding: 5px;}")
-        else:
-            self.signal_quality = "Moderate"
-            self.signal_button.setStyleSheet("QPushButton {border: 2px solid white; border-radius: 5px; background-color: black; color: yellow; padding: 5px;}")
+        snr = self.current_data['snr']
+        rssi = self.current_data['rssi']
 
-        self.signal_button.setText(f"Signal: {self.signal_quality}")
-        self.logger.debug(f"Jakość sygnału: {self.signal_quality} (SNR: {self.serial.snr}, RSSI: {self.serial.rssi})")
+        if snr >= snr_threshold and rssi >= rssi_threshold:
+            self.signal_quality = "Dobra"
+            self.signal_button.setStyleSheet(
+                "QPushButton {border: 2px solid white; border-radius: 5px; background-color: black; color: green; padding: 5px;}")
+        elif snr < snr_threshold and rssi < rssi_threshold:
+            self.signal_quality = "Słaba"
+            self.signal_button.setStyleSheet(
+                "QPushButton {border: 2px solid white; border-radius: 5px; background-color: black; color: red; padding: 5px;}")
+        else:
+            self.signal_quality = "Średnia"
+            self.signal_button.setStyleSheet(
+                "QPushButton {border: 2px solid white; border-radius: 5px; background-color: black; color: yellow; padding: 5px;}")
+
+        self.signal_button.setText(
+            f"Signal: {self.signal_quality}")
+        self.logger.debug(
+            f"Jakość sygnału: {self.signal_quality} (SNR: {snr}, RSSI: {rssi})")
 
         self.label_info.setText(
-            f"Pitch: {self.serial.pitch:.2f}°, Roll: {self.serial.roll:.2f}°\n"
-            f"V: {self.serial.velocity:.2f} m/s, H: {self.serial.altitude:.2f} m"
+            f"Pitch: {self.current_data['pitch']:.2f}°, Roll: {self.current_data['roll']:.2f}°\n"
+            f"V: {self.current_data['velocity']:.2f} m/s, H: {self.current_data['altitude']:.2f} m"
         )
-        self.label_pos.setText(f"Pos: {self.serial.latitude:.6f}  {self.serial.longitude:.6f}")
+        self.label_pos.setText(
+            f"Pos: {self.current_data['latitude']:.6f}  {self.current_data['longitude']:.6f}")
+
+    def closeEvent(self, event):
+        self.serial.stop_reading()
+        super().closeEvent(event)

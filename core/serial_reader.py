@@ -2,80 +2,121 @@ import serial
 import time
 import re
 import logging
+import threading
+from PyQt5.QtCore import QObject, pyqtSignal
 
-class SerialReader:
+
+class SerialReader(QObject):
+    telemetry_received = pyqtSignal(dict)
+    transmission_info_received = pyqtSignal(dict)
+
     def __init__(self, port="COM7", baudrate=9600):
-        self.logger = logging.getLogger('Lazarus_Ground_Station.serial_reader')
-
+        super().__init__()
+        self.logger = logging.getLogger(
+            'Lazarus_Ground_Station.serial_reader')
         self.port = port
         self.baudrate = baudrate
-        self.velocity = 0.0
-        self.pitch = 0.0
-        self.roll = 0.0
-        self.status = 0
-        self.altitude = 0.0
-        self.latitude = 0.0
-        self.longitude = 0.0
-        self.len = 0
-        self.rssi = 0
-        self.snr = 0
+        self.running = False
+        self.thread = None
 
         try:
-            self.ser = serial.Serial(self.port, self.baudrate)
-            self.logger.info(f"Otworzono port {self.port} z baudrate {self.baudrate}")
+            self.ser = serial.Serial(self.port,
+                                     self.baudrate,
+                                     timeout=0.1)
+            self.logger.info(
+                f"Otworzono port {self.port} z baudrate {self.baudrate}")
         except serial.SerialException as e:
             self.ser = None
-            self.logger.error(f"Błąd otwierania portu {self.port}: {e}")
+            self.logger.error(
+                f"Błąd otwierania portu {self.port}: {e}")
 
-    def ReadLine(self):
-        if self.ser is not None:
-            try:
-                line = self.ser.readline().decode(errors='ignore').strip()
-                # self.logger.debug(f"Odebrano linię: {line}") Podmienić na csv
-                return line
-            except Exception as e:
-                self.logger.warning(f"Błąd podczas odczytu linii: {e}")
-        else:
-            self.logger.warning("Brak połączenia z portem szeregowym")
-        return None
-
-    def DecodeLine(self):
-        line = self.ReadLine()
-        if not line:
+    def start_reading(self):
+        if self.running:
             return
 
+        self.running = True
+        self.thread = threading.Thread(
+            target=self._read_serial)
+        self.thread.daemon = True
+        self.thread.start()
+        self.logger.info(
+            "Wątek odczytu szeregowego uruchomiony")
+
+    def stop_reading(self):
+        self.running = False
+        if self.thread and self.thread.is_alive():
+            self.thread.join(timeout=1.0)
+        self.logger.info(
+            "Wątek odczytu szeregowego zatrzymany")
+
+    def _read_serial(self):
+        while self.running and self.ser and self.ser.is_open:
+            try:
+                line = self.ser.readline().decode(
+                    errors='ignore').strip()
+                if line:
+                    self.DecodeLine(line)
+            except Exception as e:
+                self.logger.error(f"Błąd odczytu: {e}")
+                time.sleep(0.1)
+
+    def DecodeLine(self, line):
         if line.startswith("+TEST: RX"):
             match = re.search(r'"([0-9A-Fa-f]+)"', line)
             if match:
                 try:
                     hex_data = match.group(1)
                     byte_data = bytes.fromhex(hex_data)
-                    decoded_string = byte_data.decode('utf-8', errors='replace')
+                    decoded_string = byte_data.decode(
+                        'utf-8', errors='replace')
                     data = decoded_string.split(";")
 
-                    self.velocity = float(data[0])
-                    self.pitch = float(data[1])
-                    self.roll = float(data[2])
-                    self.status = int(data[3])
-                    self.altitude = float(data[4])
-                    self.latitude = float(data[5])
-                    self.longitude = float(data[6])
+                    telemetry = {
+                        'velocity': float(data[0]),
+                        'pitch': float(data[1]),
+                        'roll': float(data[2]),
+                        'status': int(data[3]),
+                        'altitude': float(data[4]),
+                        'latitude': float(data[5]),
+                        'longitude': float(data[6])
+                    }
 
-                    self.logger.info(f"Dane telemetryczne: V={self.velocity}, P={self.pitch}, R={self.roll}, ST={self.status}, ALT={self.altitude}, LAT={self.latitude}, LON={self.longitude}")
+                    self.logger.info(
+                        f"Dane telemetryczne: "
+                        f"V={telemetry['velocity']}, "
+                        f"P={telemetry['pitch']}, "
+                        f"R={telemetry['roll']}, "
+                        f"ST={telemetry['status']}, "
+                        f"ALT={telemetry['altitude']}, "
+                        f"LAT={telemetry['latitude']}, "
+                        f"LON={telemetry['longitude']}")
+
+                    self.telemetry_received.emit(telemetry)
                 except Exception as e:
-                    self.logger.error(f"Błąd dekodowania danych: {e}")
+                    self.logger.error(
+                        f"Błąd dekodowania danych: {e}")
         else:
             pattern = r"\+TEST: LEN:(\d+), RSSI:(-?\d+), SNR:(-?\d+)"
             match = re.search(pattern, line)
             if match:
                 try:
-                    self.len = int(match.group(1))
-                    self.rssi = int(match.group(2))
-                    self.snr = int(match.group(3))
+                    transmission = {
+                        'len': int(match.group(1)),
+                        'rssi': int(match.group(2)),
+                        'snr': int(match.group(3))
+                    }
 
-                    self.logger.debug(f"Parametry transmisji: LEN={self.len}, RSSI={self.rssi}, SNR={self.snr}")
+                    self.logger.debug(
+                        f"Parametry transmisji: "
+                        f"LEN={transmission['len']}, "
+                        f"RSSI={transmission['rssi']}, "
+                        f"SNR={transmission['snr']}")
+
+                    self.transmission_info_received.emit(
+                        transmission)
                 except Exception as e:
-                    self.logger.warning(f"Błąd odczytu parametrów transmisji: {e}")
+                    self.logger.warning(
+                        f"Błąd odczytu parametrów transmisji: {e}")
 
     def LoraSet(self, config, is_config_selected):
         if self.ser is None:
