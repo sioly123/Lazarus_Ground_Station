@@ -77,7 +77,7 @@ class SerialReader:
                 except Exception as e:
                     self.logger.warning(f"Błąd odczytu parametrów transmisji: {e}")
 
-    def LoraSet(self, config):
+    def LoraSet(self, config, is_config_selected):
         if self.ser is None:
             self.logger.warning("Port szeregowy nie jest dostępny, pomijam konfigurację LoRa")
             return
@@ -89,20 +89,24 @@ class SerialReader:
             self.ser.write(b'at+mode=test\r\n')
             time.sleep(0.5)
 
-            rf_cmd = (f'at+test=rfcfg,'
-                   f'{config["frequency"]}.000,' #TODO, nie jestem pewny jak powinno przesłać się taką komendę
-                   f'{config["spread_factor"]},'
-                   f'{config["bandwidth"]},'
-                   f'{config["txpr"]},'
-                   f'{config["rxpr"]},'
-                   f'{config["power"]},'
-                   f'{config["crc"]},'
-                   f'{config["iq"]},'
-                   f'{config["net"]}\r\n')
+            if is_config_selected:
+                rf_cmd = (f'at+test=rfcfg,'
+                       f'{config["frequency"]}.000,'
+                       f'{config["spread_factor"]},'
+                       f'{config["bandwidth"]},'
+                       f'{config["txpr"]},'
+                       f'{config["rxpr"]},'
+                       f'{config["power"]},'
+                       f'{config["crc"]},'
+                       f'{config["iq"]},'
+                       f'{config["net"]}\r\n')
 
-            self.ser.write(rf_cmd.encode('utf-8'))
-            self.logger.debug(f"Wysłano komendę: {rf_cmd.strip()}")
-            time.sleep(0.5)
+                self.ser.write(rf_cmd.encode('utf-8'))
+                self.logger.debug(
+                    f"Wysłano komendę: {rf_cmd.strip()}")
+                time.sleep(0.5)
+            else:
+                self.logger.debug("Nie wysłano komendy konfiguracyjnej do LoRa")
 
             self.ser.write(b'at+test=rxlrpkt\r\n')
             time.sleep(0.5)

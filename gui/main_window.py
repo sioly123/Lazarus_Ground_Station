@@ -29,7 +29,7 @@ class MainWindow(QMainWindow):
         self.logger.info(f"SerialReader zainicjalizowany na porcie {config['port']} z baudrate {config['baudrate']}")
 
         if config['lora_config']:
-            self.serial.LoraSet(config['lora_config'])
+            self.serial.LoraSet(config['lora_config'], config['is_config_selected'])
             self.logger.info(f"Konfiguracja LoRa ustawiona: {config['lora_config']}")
 
         # Wykresy

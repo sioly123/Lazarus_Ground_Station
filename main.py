@@ -22,7 +22,7 @@ def main():
         config = config_dialog.get_settings()
         logger.info(f"Konfiguracja portu załadowana: {config}")
     else:
-        config = {'port': "", 'baudrate': 9600, 'lora_config': None}
+        config = {'port': "", 'baudrate': 9600, 'lora_config': None, 'is_config_selected': True}
         logger.info("Użytkownik zrezygnował z portu – używam domyślnych ustawień")
 
     window = MainWindow(config)

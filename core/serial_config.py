@@ -48,6 +48,7 @@ class SerialConfigDialog(QDialog):
             'iq': 'OFF',
             'net': 'OFF',
         }
+        self.is_config_selected = True
 
         layout = QVBoxLayout()
 
@@ -200,6 +201,7 @@ class SerialConfigDialog(QDialog):
         self._get_settings()
         self.logger.info(
             f"Wybrano konfigurację: port={self.port_name}, baudrate={self.baud_rate}, lora={self.lora_config}")
+        self.is_config_selected = False
         super().accept()
 
     def accept_no_lora(self):
@@ -207,6 +209,7 @@ class SerialConfigDialog(QDialog):
         self._get_settings()
         self.logger.info(
             f"Wybrano konfigurację bez LoRa: port={self.port_name}, baudrate={self.baud_rate}")
+        self.is_config_selected = True
         super().accept()
 
     def _get_settings(self):
@@ -232,5 +235,6 @@ class SerialConfigDialog(QDialog):
         return {
             'port': self.port_name,
             'baudrate': self.baud_rate,
-            'lora_config': self.lora_config
+            'lora_config': self.lora_config,
+            'is_config_selected': self.is_config_selected
         }
