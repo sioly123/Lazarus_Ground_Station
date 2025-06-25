@@ -53,10 +53,10 @@ class SerialReader(QObject):
                     self.DecodeLine(line)
                 else:
                     self.logger.debug("Odczytano pustą linię")
-                time.sleep(0.1)
+                time.sleep(0.030)
             except Exception as e:
                 self.logger.error(f"Błąd odczytu: {e}")
-                time.sleep(0.1)
+                time.sleep(0.030)
 
     def DecodeLine(self, line):
         self.logger.debug(f"Odebrano linię: {line}")

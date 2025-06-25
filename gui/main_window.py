@@ -201,15 +201,15 @@ class MainWindow(QMainWindow):
         rssi = self.current_data['rssi']
 
         if snr >= snr_threshold and rssi >= rssi_threshold:
-            self.signal_quality = "Dobra"
+            self.signal_quality = "Good"
             self.signal_button.setStyleSheet(
                 "QPushButton {border: 2px solid white; border-radius: 5px; background-color: black; color: green; padding: 5px;}")
         elif snr < snr_threshold and rssi < rssi_threshold:
-            self.signal_quality = "Słaba"
+            self.signal_quality = "Weak"
             self.signal_button.setStyleSheet(
                 "QPushButton {border: 2px solid white; border-radius: 5px; background-color: black; color: red; padding: 5px;}")
         else:
-            self.signal_quality = "Średnia"
+            self.signal_quality = "Average"
             self.signal_button.setStyleSheet(
                 "QPushButton {border: 2px solid white; border-radius: 5px; background-color: black; color: yellow; padding: 5px;}")
 
