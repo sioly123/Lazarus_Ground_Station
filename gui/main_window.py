@@ -134,12 +134,16 @@ class MainWindow(QMainWindow):
         # self.logger.info("Timer rozpoczęty, częstotliwość: 50 ms")
 
     def handle_processed_data(self, data):
+        self.logger.debug(
+            f"Odebrano dane przetworzone: {data}")
         self.current_data = data
-        self.logger.info("Otrzymano z wydarzenia następujące dane:" + data)
-        self.update_data()
+        try:
+            self.update_data()
+        except Exception as e:
+            self.logger.exception(
+                f"Błąd w update_data(): {e}")
 
     def update_data(self):
-        # Update plots
         self.alt_plot.update_plot(
             self.current_data['altitude'])
         self.velocity_plot.update_plot(

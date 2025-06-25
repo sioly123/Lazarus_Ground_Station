@@ -61,15 +61,25 @@ class SerialReader(QObject):
                 time.sleep(0.1)
 
     def DecodeLine(self, line):
+        self.logger.debug(f"Odebrano linię: {line}")
         if line.startswith("+TEST: RX"):
             match = re.search(r'"([0-9A-Fa-f]+)"', line)
             if match:
                 try:
                     hex_data = match.group(1)
+                    self.logger.debug(
+                        f"Odczytany hex: {hex_data}")
                     byte_data = bytes.fromhex(hex_data)
                     decoded_string = byte_data.decode(
                         'utf-8', errors='replace')
+                    self.logger.debug(
+                        f"Zdekodowany string: {decoded_string}")
                     data = decoded_string.split(";")
+
+                    if len(data) < 7:
+                        self.logger.warning(
+                            f"Niewystarczająca liczba danych: {data}")
+                        return
 
                     telemetry = {
                         'velocity': float(data[0]),

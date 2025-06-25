@@ -24,6 +24,13 @@ class ProcessData(QObject):
 
     def process_and_emit(self):
         if self.current_telemetry and self.current_transmission:
-            combined_data = {**self.current_telemetry,
-                             **self.current_transmission}
-            self.processed_data_ready.emit(combined_data)
+            try:
+                combined_data = {**self.current_telemetry,
+                                 **self.current_transmission}
+                self.logger.debug(
+                    f"Połączone dane do wysłania: {combined_data}")
+                self.processed_data_ready.emit(
+                    combined_data)
+            except Exception as e:
+                self.logger.exception(
+                    f"Błąd podczas łączenia danych telemetrycznych i transmisyjnych: {e}")
