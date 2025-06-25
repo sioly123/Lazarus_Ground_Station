@@ -128,10 +128,10 @@ class MainWindow(QMainWindow):
         central.setLayout(main_layout)
         self.setCentralWidget(central)
 
-        # self.timer = QTimer()
-        # self.timer.timeout.connect(self.update_data)
-        # self.timer.start(50)
-        # self.logger.info("Timer rozpoczęty, częstotliwość: 50 ms")
+        self.timer = QTimer()
+        self.timer.timeout.connect(self.update_data)
+        self.timer.start(500)
+        self.logger.info("Timer rozpoczęty, częstotliwość: 500 ms")
 
     def handle_processed_data(self, data):
         self.logger.debug(
