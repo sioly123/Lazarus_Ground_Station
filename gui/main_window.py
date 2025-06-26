@@ -21,7 +21,7 @@ class MainWindow(QMainWindow):
         self.recovery_detection = False
         self.landing_detection = False
 
-        self.engine_detection = False
+        # self.engine_detection = False
 
         self.current_data = {
             'velocity': 0.0,
