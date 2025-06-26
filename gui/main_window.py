@@ -18,9 +18,10 @@ class MainWindow(QMainWindow):
         self.start_detection = False
         self.calib_detection = False
         self.apogee_detection = False
-        self.descent_detection = False
-        self.engine_detection = False
         self.recovery_detection = False
+        self.landing_detection = False
+
+        self.engine_detection = False
 
         self.current_data = {
             'velocity': 0.0,
@@ -200,6 +201,40 @@ class MainWindow(QMainWindow):
                 f"{self.now_str} | WYKRYTO START")
             self.logger.info("Detekcja startu")
             self.start_detection = True
+
+
+        if ((self.current_data['status'] & (
+                1 << 2)) != 0) and not self.apogee_detection:
+            self.start_button.setStyleSheet(
+                "QPushButton {border: 2px solid white; border-radius: 5px; background-color: black; color: green; padding: 5px;}")
+            self.now_str = datetime.now().strftime(
+                "%H:%M:%S")
+            self.console.append(
+                f"{self.now_str} | WYKRYTO APOGEUM")
+            self.logger.info("Detekcja apogeum")
+            self.apogee_detection = True
+
+        if ((self.current_data['status'] & (
+                1 << 3)) != 0) and not self.recovery_detection:
+            self.start_button.setStyleSheet(
+                "QPushButton {border: 2px solid white; border-radius: 5px; background-color: black; color: green; padding: 5px;}")
+            self.now_str = datetime.now().strftime(
+                "%H:%M:%S")
+            self.console.append(
+                f"{self.now_str} | URUCHOMIONO SYSTEM ODZYSKU")
+            self.logger.info("Detekcja startu")
+            self.recovery_detection = True
+
+        if ((self.current_data['status'] & (
+                1 << 4)) != 0) and not self.landing_detection:
+            self.start_button.setStyleSheet(
+                "QPushButton {border: 2px solid white; border-radius: 5px; background-color: black; color: green; padding: 5px;}")
+            self.now_str = datetime.now().strftime(
+                "%H:%M:%S")
+            self.console.append(
+                f"{self.now_str} | WYKRYTO LĄDOWANIE")
+            self.logger.info("Detekcja lądowania")
+            self.landing_detection = True
 
         snr_threshold = 5.0
         rssi_threshold = -80.0
