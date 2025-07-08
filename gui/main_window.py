@@ -192,7 +192,7 @@ class MainWindow(QMainWindow):
             self.calib_detection = True
 
         if ((self.current_data['status'] & (
-                1 << 2)) != 0) and not self.start_detection:
+                1 << 1)) != 0) and not self.start_detection:
             self.start_button.setStyleSheet(
                 "QPushButton {border: 2px solid white; border-radius: 5px; background-color: black; color: green; padding: 5px;}")
             self.now_str = datetime.now().strftime(
@@ -204,18 +204,24 @@ class MainWindow(QMainWindow):
 
 
         if ((self.current_data['status'] & (
-                1 << 3)) != 0) and not self.engine_detection:
+                1 << 2)) != 0) and not self.engine_detection:
             self.engine_button.setStyleSheet(
                 "QPushButton {border: 2px solid white; border-radius: 5px; background-color: black; color: green; padding: 5px;}")
             self.now_str = datetime.now().strftime(
                 "%H:%M:%S")
+            self.engine_buttonn.setText(
+                f"Engine: On")
             self.console.append(
                 f"{self.now_str} | WYKRYTO URUCHOMIENIE SILNIKÓW")
             self.logger.info("Detekcja uruchomienia silników")
             self.engine_detection = True
-
+        else:
+            self.engine_buttonn.setText(
+                f"Engine: On")
+            self.engine_button.setStyleSheet(
+                "QPushButton {border: 2px solid white; border-radius: 5px; background-color: black; color: red; padding: 5px;}")
         if ((self.current_data['status'] & (
-                1 << 4)) != 0) and not self.apogee_detection:
+                1 << 3)) != 0) and not self.apogee_detection:
             self.apogee_button.setStyleSheet(
                 "QPushButton {border: 2px solid white; border-radius: 5px; background-color: black; color: green; padding: 5px;}")
             self.now_str = datetime.now().strftime(
@@ -224,7 +230,21 @@ class MainWindow(QMainWindow):
                 f"{self.now_str} | URUCHOMIONO APOGEUM")
             self.logger.info("Detekcja apogeum")
             self.apogee_detection = True
-
+        if ((self.current_data['status'] & (
+                1 << 4)) != 0) and not self.recovery_detection:
+            self.recovery_button.setStyleSheet(
+                "QPushButton {border: 2px solid white; border-radius: 5px; background-color: black; color: green; padding: 5px;}")
+            self.recovery_button.setText("Recovery: On")
+            self.now_str = datetime.now().strftime(
+                "%H:%M:%S")
+            self.console.append(
+                f"{self.now_str} | WYKRYTO LĄDOWANIE")
+            self.logger.info("Detekcja lądowania")
+            self.landing_detection = True
+        else:
+            self.recovery_button.setStyleSheet(
+                "QPushButton {border: 2px solid white; border-radius: 5px; background-color: black; color: red; padding: 5px;}")
+            self.recovery_button.setText("Recovery: Off")
         if ((self.current_data['status'] & (
                 1 << 5)) != 0) and not self.landing_detection:
             self.landing_button.setStyleSheet(
