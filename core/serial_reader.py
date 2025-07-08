@@ -79,7 +79,7 @@ class SerialReader(QObject):
                         'velocity': float(data[0]),
                         'pitch': float(data[1]),
                         'roll': float(data[2]),
-                        'status': int(data[3]),
+                        'status': int(data[3], 2),
                         'altitude': float(data[4]),
                         'latitude': float(data[5]),
                         'longitude': float(data[6])
