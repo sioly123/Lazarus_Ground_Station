@@ -71,7 +71,7 @@ class MainWindow(QMainWindow):
         self.console.setStyleSheet("background-color: black; color: white; font-family: monospace;")
 
         # Etykiety
-        self.label_info = QLabel("velocity: -- m/s, altitude: -- m \npitch: -- deg, roll: -- deg")
+        self.label_info = QLabel(f"Pitch: {self.current_data['pitch']:.2f}°, Roll: {self.current_data['roll']:.2f}°\n"f"V: {self.current_data['velocity']:.2f} m/s, H: {self.current_data['altitude']:.2f} m")
         self.label_info.setStyleSheet("color: white; font-size: 18px;")
 
         self.label_pos = QLabel("Pos: --  --  ")
@@ -161,6 +161,12 @@ class MainWindow(QMainWindow):
             self.current_data['pitch'])
         self.roll_plot.update_plot(
             self.current_data['roll'])
+        self.label_info.setText(
+            f"Pitch: {self.current_data['pitch']:.2f}°, Roll: {self.current_data['roll']:.2f}°\n"
+            f"V: {self.current_data['velocity']:.2f} m/s, H: {self.current_data['altitude']:.2f} m"
+        )
+        self.label_pos.setText(
+            f"Pos: {self.current_data['latitude']:.6f}  {self.current_data['longitude']:.6f}")
 
         self.console_update_counter += 1
         if self.console_update_counter >= 10:
@@ -217,7 +223,7 @@ class MainWindow(QMainWindow):
             self.engine_detection = True
         else:
             self.engine_buttonn.setText(
-                f"Engine: On")
+                f"Engine: Off")
             self.engine_button.setStyleSheet(
                 "QPushButton {border: 2px solid white; border-radius: 5px; background-color: black; color: red; padding: 5px;}")
         if ((self.current_data['status'] & (
@@ -278,13 +284,6 @@ class MainWindow(QMainWindow):
             f"Signal: {self.signal_quality}")
         self.logger.debug(
             f"Jakość sygnału: {self.signal_quality} (SNR: {snr}, RSSI: {rssi})")
-
-        self.label_info.setText(
-            f"Pitch: {self.current_data['pitch']:.2f}°, Roll: {self.current_data['roll']:.2f}°\n"
-            f"V: {self.current_data['velocity']:.2f} m/s, H: {self.current_data['altitude']:.2f} m"
-        )
-        self.label_pos.setText(
-            f"Pos: {self.current_data['latitude']:.6f}  {self.current_data['longitude']:.6f}")
 
     def closeEvent(self, event):
         self.serial.stop_reading()
