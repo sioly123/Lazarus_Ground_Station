@@ -15,7 +15,7 @@ class SerialConfigDialog(QDialog):
         self.logger = logging.getLogger('Lazarus_Ground_Station.serial_config')
         self.setWindowTitle(
             "Konfiguracja portu szeregowego i LoRa")
-        self.setFixedSize(450, 600)
+        self.setFixedSize(490, 600)
         self.setStyleSheet("""
             QDialog { background-color: #2c3e50; }
             QLabel { color: #ecf0f1; font-size: 12px; }
@@ -25,6 +25,12 @@ class SerialConfigDialog(QDialog):
                 border: 1px solid #7f8c8d;
                 padding: 5px;
                 border-radius: 4px;
+            }
+            QComboBox QAbstractItemView {
+                background-color: #34405e;
+                color: #ecf0f1;
+                selection-background-color: #3d566e;
+                border: 1px solid #7f8c8d;
             }
             QGroupBox { 
                 margin-top: 10px;

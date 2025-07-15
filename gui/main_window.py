@@ -215,11 +215,12 @@ class MainWindow(QMainWindow):
                 f"{self.now_str} | WYKRYTO URUCHOMIENIE SILNIKÓW")
             self.logger.info("Detekcja uruchomienia silników")
             self.engine_detection = True
-        else:
-            self.engine_buttonn.setText(
-                f"Engine: On")
-            self.engine_button.setStyleSheet(
-                "QPushButton {border: 2px solid white; border-radius: 5px; background-color: black; color: red; padding: 5px;}")
+        # else:
+        #     self.engine_buttonn.setText(
+        #         f"Engine: On")
+        #     self.engine_button.setStyleSheet(
+        #         "QPushButton {border: 2px solid white; border-radius: 5px; background-color: black; color: red; padding: 5px;}")
+        
         if ((self.current_data['status'] & (
                 1 << 3)) != 0) and not self.apogee_detection:
             self.apogee_button.setStyleSheet(
@@ -241,10 +242,11 @@ class MainWindow(QMainWindow):
                 f"{self.now_str} | WYKRYTO LĄDOWANIE")
             self.logger.info("Detekcja lądowania")
             self.landing_detection = True
-        else:
-            self.recovery_button.setStyleSheet(
-                "QPushButton {border: 2px solid white; border-radius: 5px; background-color: black; color: red; padding: 5px;}")
-            self.recovery_button.setText("Recovery: Off")
+        # else:
+        #     self.recovery_button.setStyleSheet(
+        #         "QPushButton {border: 2px solid white; border-radius: 5px; background-color: black; color: red; padding: 5px;}")
+        #     self.recovery_button.setText("Recovery: Off")
+        
         if ((self.current_data['status'] & (
                 1 << 5)) != 0) and not self.landing_detection:
             self.landing_button.setStyleSheet(

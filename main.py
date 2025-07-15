@@ -41,4 +41,5 @@ def main():
     sys.exit(exit_code)
 
 if __name__ == "__main__":
+    os.environ["QT_QPA_PLATFORM"] = "xcb"
     main()

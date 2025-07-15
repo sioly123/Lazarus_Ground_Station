@@ -19,7 +19,7 @@ class SerialReader(QObject):
         self.thread = None
 
         try:
-            self.ser = serial.Serial(self.port, self.baudrate, timeout=0.1)
+            self.ser = serial.Serial(self.port, self.baudrate, timeout=0.5)
             self.logger.info(f"Otworzono port {self.port} z baudrate {self.baudrate}")
         except serial.SerialException as e:
             self.ser = None
@@ -53,10 +53,10 @@ class SerialReader(QObject):
                     self.DecodeLine(line)
                 else:
                     self.logger.debug("Odczytano pustą linię")
-                time.sleep(0.030)
+                time.sleep(0.25)
             except Exception as e:
                 self.logger.error(f"Błąd odczytu: {e}")
-                time.sleep(0.030)
+                time.sleep(0.25)
 
     def DecodeLine(self, line):
         self.logger.debug(f"Odebrano linię: {line}")

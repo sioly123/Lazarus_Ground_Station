@@ -29,8 +29,7 @@ class CsvHandler:
                 writer.writerow(self.header)
             self.logger.info(
                 f"Created CSV file with header: {self.filename}")
-
-            # Reopen in append mode for future writes
+            
             self.file = open(self.filename, 'a', newline='',
                              encoding='utf-8')
             self.writer = csv.writer(self.file,
@@ -51,7 +50,7 @@ class CsvHandler:
                 row.append(data_dict.get(key, ''))
 
             self.writer.writerow(row)
-            self.file.flush()  # Ensure data is written immediately
+            self.file.flush()
         except Exception as e:
             self.logger.error(f"Error writing to CSV: {e}")
 
