@@ -68,7 +68,7 @@ class MainWindow(QMainWindow):
         # Konsola
         self.console = QTextEdit()
         self.console.setReadOnly(True)
-        self.console.setStyleSheet("background-color: black; color: white; font-family: monospace;")
+        self.console.setStyleSheet("background-color: #1f1f1f; color: white; font-family: monospace;")
 
         # Etykiety
         self.label_info = QLabel("velocity: -- m/s, altitude: -- m \npitch: -- deg, roll: -- deg")
