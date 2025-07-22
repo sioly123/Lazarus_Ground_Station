@@ -71,7 +71,7 @@ class MainWindow(QMainWindow):
         self.console.setStyleSheet("background-color: #1f1f1f; color: white; font-family: monospace;")
 
         # Etykiety
-        self.label_info = QLabel("velocity: -- m/s, altitude: -- m \npitch: -- deg, roll: -- deg")
+        self.label_info = QLabel(f"Pitch: {self.current_data['pitch']:.2f}°, Roll: {self.current_data['roll']:.2f}°\n"f"V: {self.current_data['velocity']:.2f} m/s, H: {self.current_data['altitude']:.2f} m")
         self.label_info.setStyleSheet("color: white; font-size: 18px;")
 
         self.label_pos = QLabel("Pos: --  --  ")
@@ -161,102 +161,136 @@ class MainWindow(QMainWindow):
             self.current_data['pitch'])
         self.roll_plot.update_plot(
             self.current_data['roll'])
-
-        self.console_update_counter += 1
-        if self.console_update_counter >= 10:
-            self.console_update_counter = 0
-            self.now_str = datetime.now().strftime(
-                "%H:%M:%S")
-            msg = (
-                f"{self.current_data['velocity']};{self.current_data['altitude']};"
-                f"{self.current_data['pitch']};{self.current_data['roll']};"
-                f"{self.current_data['status']};{self.current_data['latitude']};"
-                f"{self.current_data['longitude']}")
-            self.console.append(
-                f"{self.now_str} | LEN: {self.current_data['len']} bajtów | "
-                f"RSSI: {self.current_data['rssi']} dBm | "
-                f"SNR: {self.current_data['snr']} dB | msg: {msg}"
-            )
-            self.logger.debug(f"Odebrano dane: {msg}")
-
-        if ((self.current_data['status'] & (
-                1 << 0)) != 0) and not self.calib_detection:
-            self.calib_button.setStyleSheet(
-                "QPushButton {border: 2px solid white; border-radius: 5px; background-color: black; color: green; padding: 5px;}")
-            self.calib_button.setText("Calibration: On")
-            self.now_str = datetime.now().strftime(
-                "%H:%M:%S")
-            self.console.append(
-                f"{self.now_str} | KALIBRACJA WŁĄCZONA")
-            self.logger.info("Detekcja kalibracji")
-            self.calib_detection = True
-
-        if ((self.current_data['status'] & (
-                1 << 1)) != 0) and not self.start_detection:
-            self.start_button.setStyleSheet(
-                "QPushButton {border: 2px solid white; border-radius: 5px; background-color: black; color: green; padding: 5px;}")
-            self.now_str = datetime.now().strftime(
-                "%H:%M:%S")
-            self.console.append(
-                f"{self.now_str} | WYKRYTO START")
-            self.logger.info("Detekcja startu")
-            self.start_detection = True
-
-
-        if ((self.current_data['status'] & (
-                1 << 2)) != 0) and not self.engine_detection:
-            self.engine_button.setStyleSheet(
-                "QPushButton {border: 2px solid white; border-radius: 5px; background-color: black; color: green; padding: 5px;}")
-            self.now_str = datetime.now().strftime(
-                "%H:%M:%S")
-            self.engine_buttonn.setText(
-                f"Engine: On")
-            self.console.append(
-                f"{self.now_str} | WYKRYTO URUCHOMIENIE SILNIKÓW")
-            self.logger.info("Detekcja uruchomienia silników")
-            self.engine_detection = True
-        # else:
-        #     self.engine_buttonn.setText(
-        #         f"Engine: On")
-        #     self.engine_button.setStyleSheet(
-        #         "QPushButton {border: 2px solid white; border-radius: 5px; background-color: black; color: red; padding: 5px;}")
         
-        if ((self.current_data['status'] & (
-                1 << 3)) != 0) and not self.apogee_detection:
-            self.apogee_button.setStyleSheet(
-                "QPushButton {border: 2px solid white; border-radius: 5px; background-color: black; color: green; padding: 5px;}")
-            self.now_str = datetime.now().strftime(
-                "%H:%M:%S")
-            self.console.append(
-                f"{self.now_str} | URUCHOMIONO APOGEUM")
-            self.logger.info("Detekcja apogeum")
-            self.apogee_detection = True
-        if ((self.current_data['status'] & (
-                1 << 4)) != 0) and not self.recovery_detection:
-            self.recovery_button.setStyleSheet(
-                "QPushButton {border: 2px solid white; border-radius: 5px; background-color: black; color: green; padding: 5px;}")
-            self.recovery_button.setText("Recovery: On")
-            self.now_str = datetime.now().strftime(
-                "%H:%M:%S")
-            self.console.append(
-                f"{self.now_str} | WYKRYTO LĄDOWANIE")
-            self.logger.info("Detekcja lądowania")
-            self.landing_detection = True
-        # else:
-        #     self.recovery_button.setStyleSheet(
-        #         "QPushButton {border: 2px solid white; border-radius: 5px; background-color: black; color: red; padding: 5px;}")
-        #     self.recovery_button.setText("Recovery: Off")
-        
-        if ((self.current_data['status'] & (
-                1 << 5)) != 0) and not self.landing_detection:
-            self.landing_button.setStyleSheet(
-                "QPushButton {border: 2px solid white; border-radius: 5px; background-color: black; color: green; padding: 5px;}")
-            self.now_str = datetime.now().strftime(
-                "%H:%M:%S")
-            self.console.append(
-                f"{self.now_str} | WYKRYTO LĄDOWANIE")
-            self.logger.info("Detekcja lądowania")
-            self.landing_detection = True
+        self.label_info.setText(
+            f"Pitch: {self.current_data['pitch']:.2f}°, Roll: {self.current_data['roll']:.2f}°\n"
+            f"V: {self.current_data['velocity']:.2f} m/s, H: {self.current_data['altitude']:.2f} m"
+        )
+        self.label_pos.setText(
+            f"LON:\t{self.current_data['longitude']:.6f}° N \nLAT:\t{self.current_data['latitude']:.6f}° E"
+        )
+
+        self.now_str = datetime.now().strftime("%H:%M:%S")
+        msg = (
+            f"{self.current_data['velocity']};{self.current_data['altitude']};"
+            f"{self.current_data['pitch']};{self.current_data['roll']};"
+            f"{self.current_data['status']};{self.current_data['latitude']};"
+            f"{self.current_data['longitude']}"
+        )
+        self.console.append(
+            f"{self.now_str} | LEN: {self.current_data['len']} bajtów | "
+            f"RSSI: {self.current_data['rssi']} dBm | "
+            f"SNR: {self.current_data['snr']} dB | msg: {msg}"
+        )
+        self.logger.debug(f"Odebrano dane: {msg}")
+
+        status = self.current_data['status']
+
+        # Calibration
+        if status & (1 << 0):
+            if not self.calib_detection:
+                self.calib_button.setStyleSheet(
+                    "QPushButton {border: 2px solid white; border-radius: 5px; background-color: black; color: green; padding: 5px;}"
+                )
+                self.calib_button.setText("Calibration: On")
+                self.console.append(f"{self.now_str} | CALIB ON")
+                self.logger.info("Detekcja kalibracji")
+                self.calib_detection = True
+        else:
+            if self.calib_detection:
+                self.calib_button.setStyleSheet(
+                    "QPushButton {border: 2px solid white; border-radius: 5px; background-color: black; color: red; padding: 5px;}"
+                )
+                self.calib_button.setText("Calibration: Off")
+                self.calib_detection = False
+
+        # Start
+        if status & (1 << 1):
+            if not self.start_detection:
+                self.start_button.setStyleSheet(
+                    "QPushButton {border: 2px solid white; border-radius: 5px; background-color: black; color: green; padding: 5px;}"
+                )
+                self.logger.info("Detekcja startu")
+                self.console.append(f"{self.now_str} | START DETECTION")
+                print("Detekcja startu")
+                self.start_detection = True
+        else:
+            if self.start_detection:
+                self.start_button.setStyleSheet(
+                    "QPushButton {border: 2px solid white; border-radius: 5px; background-color: black; color: red; padding: 5px;}"
+                )
+                self.start_detection = False
+
+        # Engine
+        if status & (1 << 2):
+            if not self.engine_detection:
+                self.engine_button.setStyleSheet(
+                    "QPushButton {border: 2px solid white; border-radius: 5px; background-color: black; color: green; padding: 5px;}"
+                )
+                self.engine_buttonn.setText("Engine: On")
+                self.console.append(f"{self.now_str} | ENGINE ON")
+                self.logger.info("Detekcja uruchomienia silników")
+                self.engine_detection = True
+        else:
+            if self.engine_detection:
+                self.engine_button.setStyleSheet(
+                    "QPushButton {border: 2px solid white; border-radius: 5px; background-color: black; color: red; padding: 5px;}"
+                )
+                self.engine_buttonn.setText("Engine: Off")
+                self.console.append(f"{self.now_str} | ENGINE OF")
+                self.engine_detection = False
+
+        # Apogee
+        if status & (1 << 3):
+            if not self.apogee_detection:
+                self.apogee_button.setStyleSheet(
+                    "QPushButton {border: 2px solid white; border-radius: 5px; background-color: black; color: green; padding: 5px;}"
+                )
+                self.console.append(f"{self.now_str} | APOGEE DETECTION")
+                self.logger.info("Detekcja apogeum")
+                self.apogee_detection = True
+        else:
+            if self.apogee_detection:
+                self.apogee_button.setStyleSheet(
+                    "QPushButton {border: 2px solid white; border-radius: 5px; background-color: black; color: red; padding: 5px;}"
+                )
+                self.apogee_detection = False
+
+        # Recovery
+        if status & (1 << 4):
+            if not self.recovery_detection:
+                self.recovery_button.setStyleSheet(
+                    "QPushButton {border: 2px solid white; border-radius: 5px; background-color: black; color: green; padding: 5px;}"
+                )
+                self.recovery_button.setText("Recovery: On")
+                self.console.append(f"{self.now_str} | RECOVERY DETECTION")
+                self.logger.info("Detekcja odzysku")
+                print("Detekcja odzysku")
+                self.recovery_detection = True
+        else:
+            if self.recovery_detection:
+                self.recovery_button.setStyleSheet(
+                    "QPushButton {border: 2px solid white; border-radius: 5px; background-color: black; color: red; padding: 5px;}"
+                )
+                self.recovery_button.setText("Recovery: Off")
+                self.recovery_detection = False
+
+        # Landing
+        if status & (1 << 5):
+            if not self.landing_detection:
+                self.landing_button.setStyleSheet(
+                    "QPushButton {border: 2px solid white; border-radius: 5px; background-color: black; color: green; padding: 5px;}"
+                )
+                self.console.append(f"{self.now_str} | DESCENT DETECTION")
+                self.logger.info("Detekcja lądowania")
+                print("Detekcja lądowania")
+                self.landing_detection = True
+        else:
+            if self.landing_detection:
+                self.landing_button.setStyleSheet(
+                    "QPushButton {border: 2px solid white; border-radius: 5px; background-color: black; color: red; padding: 5px;}"
+                )
+                self.landing_detection = False
 
         snr_threshold = 5.0
         rssi_threshold = -80.0
@@ -280,13 +314,6 @@ class MainWindow(QMainWindow):
             f"Signal: {self.signal_quality}")
         self.logger.debug(
             f"Jakość sygnału: {self.signal_quality} (SNR: {snr}, RSSI: {rssi})")
-
-        self.label_info.setText(
-            f"Pitch: {self.current_data['pitch']:.2f}°, Roll: {self.current_data['roll']:.2f}°\n"
-            f"V: {self.current_data['velocity']:.2f} m/s, H: {self.current_data['altitude']:.2f} m"
-        )
-        self.label_pos.setText(
-            f"Pos: {self.current_data['latitude']:.6f}  {self.current_data['longitude']:.6f}")
 
     def closeEvent(self, event):
         self.serial.stop_reading()
