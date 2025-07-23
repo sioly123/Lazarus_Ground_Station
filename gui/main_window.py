@@ -1,6 +1,12 @@
 import logging
-from PyQt5.QtWidgets import QMainWindow, QTextEdit, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton
-from PyQt5.QtCore import QTimer, Qt
+from PyQt5.QtWebEngineWidgets import QWebEngineView
+from PyQt5.QtWidgets import (QMainWindow, QTextEdit,
+                             QWidget,
+                             QHBoxLayout, QLabel,
+                             QPushButton,
+                             QGridLayout, QVBoxLayout)
+from PyQt5.QtCore import Qt
+import folium
 from core.serial_reader import SerialReader
 from gui.live_plot import LivePlot
 from datetime import datetime
@@ -160,21 +166,16 @@ class MainWindow(QMainWindow):
         main_layout.addLayout(top_plots_row, 0, 0)
         main_layout.addLayout(bottom_plots_row, 1, 0)
         main_layout.addWidget(self.console, 2, 0, 1,
-                              2)  # Konsola na całą szerokość
+                              2)
         main_layout.addWidget(side_panel, 0, 1, 2,
-                              1)  # Panel boczny obok wykresów
+                              1)
 
-        # main_layout.addLayout(top_row)
-        # main_layout.addLayout(bottom_row)
-        # main_layout.addWidget(self.console)
-
-        ### NOWE PROPORCJE ###
         main_layout.setRowStretch(0,
-                                  4)  # Górne wykresy - 45% wysokości
+                                  4)
         main_layout.setRowStretch(1,
-                                  4)  # Dolne wykresy - 45% wysokości
+                                  4)
         main_layout.setRowStretch(2,
-                                  1)  # Konsola - 10% wysokości (zmniejszona)
+                                  1)
 
         # Proporcje kolumn (80% wykresy, 20% panel boczny)
         main_layout.setColumnStretch(0, 4)
@@ -184,6 +185,17 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(central)
 
         self.serial.start_reading()
+
+    def create_side_panel(self):
+        """Tworzy panel boczny z mapą i przyciskami"""
+        panel = QWidget()
+        layout = QVBoxLayout()
+        layout.setContentsMargins(2, 2, 2, 2)
+        layout.setSpacing(5)
+
+        # Etykieta z danymi (nad mapą)
+        layout.addWidget(self.label_info,
+                         alignment=Qt.AlignCenter)
 
         # Mapa
         layout.addWidget(self.map_view,
@@ -218,6 +230,7 @@ class MainWindow(QMainWindow):
         panel.setMinimumWidth(270)
         panel.setMaximumWidth(300)
         return panel
+
 
     def initialize_map(self):
         """Inicjalizuje mapę 250x250px"""

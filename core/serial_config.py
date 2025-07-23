@@ -25,12 +25,14 @@ class SerialConfigDialog(QDialog):
                 border: 1px solid #7f8c8d;
                 padding: 5px;
                 border-radius: 4px;
+                font-size: 12px;
             }
             QComboBox QAbstractItemView {
                 background-color: #34405e;
                 color: #ecf0f1;
                 selection-background-color: #3d566e;
                 border: 1px solid #7f8c8d;
+                font-size: 12px;
             }
             QGroupBox { 
                 margin-top: 10px;

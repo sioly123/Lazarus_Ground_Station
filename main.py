@@ -1,5 +1,6 @@
 import sys
 import logging
+import platform
 from PyQt5.QtWidgets import (QApplication, QDialog)
 from gui.main_window import MainWindow
 from core.serial_config import SerialConfigDialog
@@ -41,5 +42,9 @@ def main():
     sys.exit(exit_code)
 
 if __name__ == "__main__":
-    os.environ["QT_QPA_PLATFORM"] = "xcb"
+    operational_system = platform.system()
+    if operational_system == 'Windows':
+        os.environ["QT_QPA_PLATFORM"] = "windows"
+    elif operational_system == 'Linux':
+        os.environ["QT_QPA_PLATFORM"] = "xcb"
     main()
