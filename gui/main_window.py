@@ -236,7 +236,7 @@ class MainWindow(QMainWindow):
         """Inicjalizuje mapę 250x250px"""
         self.map = folium.Map(
             location=[self.current_lat, self.current_lng],
-            zoom_start=18,
+            zoom_start=15,
             width=250,
             height=250,
             control_scale=True,
@@ -245,7 +245,7 @@ class MainWindow(QMainWindow):
 
         folium.Marker(
             [self.current_lat, self.current_lng],
-            popup=f"WAT: {self.current_lat:.6f}, {self.current_lng:.6f}",
+            popup=f"LOTUS: {self.current_lat:.6f}, {self.current_lng:.6f}",
             icon=folium.Icon(color="green", icon="flag",
                              prefix='fa')
         ).add_to(self.map)
@@ -256,7 +256,7 @@ class MainWindow(QMainWindow):
         """Aktualizuje widok mapy"""
         self.map_view.setHtml(open('map.html').read())
 
-    def handle_processed_data(self, data):
+    def handle_processed_data(self, data): #TODO to należy zintegrować z metodą poniżej
         self.logger.debug(
             f"Odebrano dane przetworzone: {data}")
         self.current_data = data
