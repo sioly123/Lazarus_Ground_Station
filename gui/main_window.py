@@ -272,8 +272,8 @@ class MainWindow(QMainWindow):
         self.map = folium.Map(
             location=[self.current_lat, self.current_lng],
             zoom_start=18,
-            width='250px',
-            height='250px',
+            width=250,
+            height=250,
             control_scale=True,
             tiles='OpenStreetMap'
         )
