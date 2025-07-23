@@ -20,7 +20,6 @@ class MainWindow(QMainWindow):
         self.apogee_detection = False
         self.recovery_detection = False
         self.landing_detection = False
-
         self.engine_detection = False
 
         self.current_data = {
@@ -29,12 +28,18 @@ class MainWindow(QMainWindow):
             'pitch': 0.0,
             'roll': 0.0,
             'status': 0,
-            'latitude': 0.0,
-            'longitude': 0.0,
+            'latitude': 52.2549,
+            'longitude': 20.9004,
             'len': 0,
             'rssi': 0,
             'snr': 0
         }
+
+        # Inicjalizacja mapy
+        self.current_lat = self.current_data['latitude']
+        self.current_lng = self.current_data['longitude']
+        self.map = None
+        self.map_view = None
 
         self.csv_handler = CsvHandler()
         self.logger.info(
@@ -43,7 +48,11 @@ class MainWindow(QMainWindow):
         self.signal_quality = "None"
 
         self.setWindowTitle("LoRa Telemetry")
-        self.setStyleSheet("background-color: black; color: white;")
+        self.setStyleSheet("""
+            background-color: black; 
+            color: white;
+        """)
+        # self.setMinimumSize(1200, 800)
 
         self.serial = SerialReader(config['port'], config['baudrate'])
         self.logger.info(f"SerialReader zainicjalizowany na porcie {config['port']} z baudrate {config['baudrate']}")
@@ -93,53 +102,146 @@ class MainWindow(QMainWindow):
         ]
 
         for btn in buttons:
-            btn.setStyleSheet("QPushButton {border: 2px solid white; border-radius: 5px; color: red; padding: 5px;}")
+            btn.setStyleSheet("""
+                QPushButton {
+                    border: 1px solid white;
+                    border-radius: 3px;
+                    color: red;
+                    padding: 3px;
+                    min-width: 120px;
+                    margin: 1px;
+                    font-size: 12px;
+                }
+            """)
+
+
+        # Mapa 250x250px
+        self.initialize_map()
+        self.map_view = QWebEngineView()
+        self.map_view.setFixedSize(250, 250)
+        self.map_view.setStyleSheet("""
+            QWebEngineView {
+                background-color: black;
+                border: 1px solid #444;
+                border-radius: 3px;
+            }
+        """)
+        self.update_map_view()
 
         central = QWidget()
-        main_layout = QVBoxLayout()
+        main_layout = QGridLayout()
+        main_layout.setContentsMargins(5, 5, 5, 5)
+        main_layout.setSpacing(5)
 
-        top_row = QHBoxLayout()
-        top_row.addWidget(self.alt_plot)
-        top_row.addWidget(self.velocity_plot)
+        # Główny układ (QGridLayout)
+        central = QWidget()
+        main_layout = QGridLayout()
+        main_layout.setContentsMargins(5, 5, 5, 5)
+        main_layout.setSpacing(5)
 
-        status_panel = QVBoxLayout()
-        status_panel.addWidget(self.label_info)
-        status_panel.addWidget(self.start_button)
-        status_panel.addWidget(self.apogee_button)
-        status_panel.addWidget(self.landing_button)
-        status_panel.addWidget(self.label_pos)
-        status_panel_widget = QWidget()
-        status_panel_widget.setLayout(status_panel)
-        status_panel_widget.setFixedWidth(210)
-        top_row.addWidget(status_panel_widget)
+        # Górny wiersz - altitude i velocity
+        top_plots_row = QHBoxLayout()
+        top_plots_row.setContentsMargins(0, 0, 0, 0)
+        top_plots_row.setSpacing(5)
+        top_plots_row.addWidget(self.alt_plot, 1)
+        top_plots_row.addWidget(self.velocity_plot, 1)
 
-        bottom_row = QHBoxLayout()
-        bottom_row.addWidget(self.pitch_plot)
-        bottom_row.addWidget(self.roll_plot)
+        # Dolny wiersz - pitch i roll
+        bottom_plots_row = QHBoxLayout()
+        bottom_plots_row.setContentsMargins(0, 0, 0, 0)
+        bottom_plots_row.setSpacing(5)
+        bottom_plots_row.addWidget(self.pitch_plot, 1)
+        bottom_plots_row.addWidget(self.roll_plot, 1)
 
-        engine_panel = QVBoxLayout()
-        engine_panel.addWidget(self.calib_button)
-        engine_panel.addWidget(self.engine_button)
-        engine_panel.addWidget(self.recovery_button)
-        engine_panel.addWidget(self.signal_button)
-        engine_panel_widget = QWidget()
-        engine_panel_widget.setLayout(engine_panel)
-        engine_panel_widget.setFixedWidth(210)
-        bottom_row.addWidget(engine_panel_widget)
+        # Panel boczny
+        side_panel = self.create_side_panel()
 
-        main_layout.addLayout(top_row)
-        main_layout.addLayout(bottom_row)
-        main_layout.addWidget(self.console)
+        # Ustawienie elementów w siatce
+        main_layout.addLayout(top_plots_row, 0, 0)
+        main_layout.addLayout(bottom_plots_row, 1, 0)
+        main_layout.addWidget(self.console, 2, 0, 1,
+                              2)  # Konsola na całą szerokość
+        main_layout.addWidget(side_panel, 0, 1, 2,
+                              1)  # Panel boczny obok wykresów
+
+        # main_layout.addLayout(top_row)
+        # main_layout.addLayout(bottom_row)
+        # main_layout.addWidget(self.console)
+
+        ### NOWE PROPORCJE ###
+        main_layout.setRowStretch(0,
+                                  4)  # Górne wykresy - 45% wysokości
+        main_layout.setRowStretch(1,
+                                  4)  # Dolne wykresy - 45% wysokości
+        main_layout.setRowStretch(2,
+                                  1)  # Konsola - 10% wysokości (zmniejszona)
+
+        # Proporcje kolumn (80% wykresy, 20% panel boczny)
+        main_layout.setColumnStretch(0, 4)
+        main_layout.setColumnStretch(1, 1)
 
         central.setLayout(main_layout)
         self.setCentralWidget(central)
 
         self.serial.start_reading()
 
-        # self.timer = QTimer()
-        # self.timer.timeout.connect(self.update_data)
-        # self.timer.start(500)
-        # self.logger.info("Timer rozpoczęty, częstotliwość: 500 ms")
+        # Mapa
+        layout.addWidget(self.map_view,
+                         alignment=Qt.AlignCenter)
+
+        # Etykieta z pozycją (pod mapą)
+        layout.addWidget(self.label_pos,
+                         alignment=Qt.AlignCenter)
+
+        # Przyciski w siatce
+        button_grid = QGridLayout()
+        button_grid.setContentsMargins(0, 0, 0, 0)
+        button_grid.setSpacing(3)
+        buttons = [
+            (self.start_button, 0, 0),
+            (self.apogee_button, 0, 1),
+            (self.landing_button, 1, 0),
+            (self.calib_button, 1, 1),
+            (self.engine_button, 2, 0),
+            (self.recovery_button, 2, 1),
+            (self.signal_button, 3, 0, 1, 2)
+        ]
+
+        for btn, row, col, *span in buttons:
+            if span:
+                button_grid.addWidget(btn, row, col, *span)
+            else:
+                button_grid.addWidget(btn, row, col)
+
+        layout.addLayout(button_grid)
+        panel.setLayout(layout)
+        panel.setMinimumWidth(270)
+        panel.setMaximumWidth(300)
+        return panel
+
+    def initialize_map(self):
+        """Inicjalizuje mapę 250x250px"""
+        self.map = folium.Map(
+            location=[self.current_lat, self.current_lng],
+            zoom_start=18,
+            width=250,
+            height=250,
+            control_scale=True,
+            tiles='OpenStreetMap'
+        )
+
+        folium.Marker(
+            [self.current_lat, self.current_lng],
+            popup=f"WAT: {self.current_lat:.6f}, {self.current_lng:.6f}",
+            icon=folium.Icon(color="green", icon="flag",
+                             prefix='fa')
+        ).add_to(self.map)
+
+        self.map.save('map.html')
+
+    def update_map_view(self):
+        """Aktualizuje widok mapy"""
+        self.map_view.setHtml(open('map.html').read())
 
     def handle_processed_data(self, data):
         self.logger.debug(
@@ -148,11 +250,21 @@ class MainWindow(QMainWindow):
         try:
             self.update_data()
             self.csv_handler.write_row(data)
+
+            if data['latitude'] != 0.0 and data[
+                'longitude'] != 0.0:
+                self.current_lat = data['latitude']
+                self.current_lng = data['longitude']
+                self.initialize_map()
+                self.update_map_view()
+
         except Exception as e:
             self.logger.exception(
                 f"Błąd w update_data(): {e}")
 
     def update_data(self):
+        """Aktualizacja danych na interfejsie"""
+        # Aktualizacja wykresów
         self.alt_plot.update_plot(
             self.current_data['altitude'])
         self.velocity_plot.update_plot(
@@ -161,7 +273,7 @@ class MainWindow(QMainWindow):
             self.current_data['pitch'])
         self.roll_plot.update_plot(
             self.current_data['roll'])
-        
+
         self.label_info.setText(
             f"Pitch: {self.current_data['pitch']:.2f}°, Roll: {self.current_data['roll']:.2f}°\n"
             f"V: {self.current_data['velocity']:.2f} m/s, H: {self.current_data['altitude']:.2f} m"
@@ -316,6 +428,7 @@ class MainWindow(QMainWindow):
             f"Jakość sygnału: {self.signal_quality} (SNR: {snr}, RSSI: {rssi})")
 
     def closeEvent(self, event):
+        """Zamykanie aplikacji"""
         self.serial.stop_reading()
         self.csv_handler.close_file()
         super().closeEvent(event)
