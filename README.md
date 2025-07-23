@@ -13,8 +13,8 @@ git clone https://github.com/sioly123/Lazarus_Ground_Station.git
 ## Contribution
 
 The following contributed to the repository code:
-1. Filip Sudak
-2. Bernard Siodłowski 
-3. Adrian Panasiewicz 
+1. Bernard Siodłowski 
+2. Adrian Panasiewicz 
+3. Filip Sudak
 
 We welcome contributions! Feel free to open an issue or submit a pull request.
